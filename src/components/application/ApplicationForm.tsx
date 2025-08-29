@@ -30,6 +30,7 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
     formState: { errors },
     watch,
     setValue,
+    trigger,
   } = useForm<ApplicationFormData>({
     resolver: zodResolver(applicationSchema),
     mode: 'onChange',
@@ -77,11 +78,8 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
       setResumeFile(file);
       // if user uploads file, clear any resume link
       setResumeLink('');
-      // mirror into form if you want
-      setValue('resume' as any, file);
     } else {
       setPortfolioFile(file);
-      setValue('portfolio' as any, file);
     }
   };
 
@@ -89,7 +87,6 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
     setResumeLink(value);
     // if user provides a link, clear uploaded file
     if (value) setResumeFile(null);
-    setValue('resumeLink' as any, value);
   };
 
   const isValidUrl = (value: string) => {
@@ -105,6 +102,13 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
   // Ensure resume requirement: either file or valid link
   const hasResumeProvided = Boolean(resumeFile) || (resumeLink && isValidUrl(resumeLink));
 
+  const nextStep = async () => {
+    const isValid = await trigger();
+    if (isValid) {
+      setCurrentStep(Math.min(steps.length - 1, currentStep + 1));
+    }
+  };
+
   const renderStep = () => {
     switch (currentStep) {
       case 0:
@@ -112,19 +116,71 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input label="First Name" placeholder="John" error={errors.firstName?.message} {...register('firstName')} />
-              <Input label="Last Name" placeholder="Doe" error={errors.lastName?.message} {...register('lastName')} />
+              <Input 
+                label="First Name" 
+                placeholder="John" 
+                error={errors.firstName?.message} 
+                {...register('firstName')} 
+              />
+              <Input 
+                label="Last Name" 
+                placeholder="Doe" 
+                error={errors.lastName?.message} 
+                {...register('lastName')} 
+              />
             </div>
 
-            <Input label="Email Address" type="email" placeholder="john@example.com" error={errors.email?.message} {...register('email')} />
-            <Input label="Phone Number" type="tel" placeholder="+91 12345-67890" error={errors.phone?.message} {...register('phone')} />
+            <Input 
+              label="Email Address" 
+              type="email" 
+              placeholder="john@example.com" 
+              error={errors.email?.message} 
+              {...register('email')} 
+            />
+            
+            <Input 
+              label="Phone Number" 
+              type="tel" 
+              placeholder="+91 12345-67890" 
+              error={errors.phone?.message} 
+              {...register('phone')} 
+            />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input label="LinkedIn Profile (Optional)" placeholder="https://www.linkedin.com/in/yourprofile" {...register('linkedIn' as any)} />
-              <Input label="Portfolio Website (Optional)" placeholder="https://" {...register('portfolioWebsite' as any)} />
+            <Input 
+              label="Date of Birth" 
+              type="date" 
+              error={errors.dateOfBirth?.message} 
+              {...register('dateOfBirth')} 
+            />
+
+            <Textarea 
+              label="Address" 
+              placeholder="Your full address" 
+              rows={2} 
+              error={errors.address?.message} 
+              {...register('address')} 
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Input 
+                label="City" 
+                placeholder="Mumbai" 
+                error={errors.city?.message} 
+                {...register('city')} 
+              />
+              <Input 
+                label="State" 
+                placeholder="Maharashtra" 
+                error={errors.state?.message} 
+                {...register('state')} 
+              />
+              <Input 
+                label="ZIP Code" 
+                placeholder="400001" 
+                error={errors.zipCode?.message} 
+                {...register('zipCode')} 
+              />
             </div>
-
-            <Textarea label="Short Bio (Optional)" placeholder="A one line about you..." rows={3} {...register('shortBio' as any)} />
           </div>
         );
 
@@ -132,46 +188,113 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Education & Experience</h3>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input label="Current Status" placeholder="Select your current status" {...register('education.status' as any)} />
-              <Input label="Class / Year" placeholder="2024" {...register('education.classYear' as any)} />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input label="Course Pursuing" placeholder="BSc IT" {...register('education.course' as any)} />
-              <Input label="College / University" placeholder="University name" {...register('education.university' as any)} />
+              <Input 
+                label="Degree" 
+                placeholder="Bachelor's, Master's, etc." 
+                error={errors.education?.degree?.message} 
+                {...register('education.degree')} 
+              />
+              <Input 
+                label="Field of Study" 
+                placeholder="Computer Science, IT, etc." 
+                error={errors.education?.field?.message} 
+                {...register('education.field')} 
+              />
             </div>
 
-            <Input label="Experience Level" placeholder="Fresher (0-1 years)" {...register('experience.level' as any)} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input 
+                label="University / College" 
+                placeholder="University name" 
+                error={errors.education?.university?.message} 
+                {...register('education.university')} 
+              />
+              <Input 
+                label="Graduation Year" 
+                placeholder="2024" 
+                error={errors.education?.graduationYear?.message} 
+                {...register('education.graduationYear')} 
+              />
+            </div>
+
+            <Input 
+              label="GPA (Optional)" 
+              placeholder="8.5/10 or 3.8/4.0" 
+              error={errors.education?.gpa?.message} 
+              {...register('education.gpa')} 
+            />
+
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <input 
+                  type="checkbox" 
+                  id="hasExperience" 
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                  {...register('experience.hasExperience')} 
+                />
+                <label htmlFor="hasExperience" className="text-sm font-medium text-gray-700">
+                  I have relevant work experience or internships
+                </label>
+              </div>
+
+              {hasExperience && (
+                <Textarea 
+                  label="Previous Internships / Work Experience" 
+                  placeholder="Describe your previous internships or work experience..." 
+                  rows={3} 
+                  error={errors.experience?.previousInternships?.message} 
+                  {...register('experience.previousInternships')} 
+                />
+              )}
+
+              <Textarea 
+                label="Projects" 
+                placeholder="Describe any relevant projects you've worked on..." 
+                rows={3} 
+                error={errors.experience?.projects?.message} 
+                {...register('experience.projects')} 
+              />
+
+              <Textarea 
+                label="Relevant Skills" 
+                placeholder="Describe your technical skills and expertise..." 
+                rows={4} 
+                error={errors.experience?.skills?.message} 
+                {...register('experience.skills')} 
+              />
+            </div>
           </div>
         );
 
       case 2:
         return (
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Skills & Motivation</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Application Details</h3>
 
-            <p className="text-sm font-medium text-gray-700">Select Your Skills</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
-              {[
-                'Web Development',
-                'Content Creation',
-                'Graphic Design',
-                'Video Editing',
-                'SEO',
-                'Digital Marketing',
-                'Social Media',
-                'UI/UX Design',
-              ].map((skill) => (
-                <label key={skill} className="inline-flex items-center space-x-2">
-                  <input type="checkbox" className="rounded text-blue-600" {...register(('skills.' + skill) as any)} />
-                  <span className="text-sm">{skill}</span>
-                </label>
-              ))}
-            </div>
+            <Textarea 
+              label="Cover Letter" 
+              placeholder="Write a brief cover letter explaining your interest and qualifications..." 
+              rows={6} 
+              error={errors.coverLetter?.message} 
+              {...register('coverLetter')} 
+            />
 
-            <Textarea label="Why do you want to apply for this internship?" placeholder="Tell us about your motivation and why you're a good fit..." rows={5} {...register('motivation' as any)} />
+            <Textarea 
+              label="Why are you interested in this internship?" 
+              placeholder="Tell us what motivates you to apply for this position..." 
+              rows={4} 
+              error={errors.whyInterested?.message} 
+              {...register('whyInterested')} 
+            />
 
-            <Textarea label="Other Relevant Skills / Tools" placeholder="List languages, frameworks, tools..." rows={3} {...register('skills.freeText' as any)} />
+            <Input 
+              label="Availability" 
+              placeholder="Full-time, Part-time, Weekends, etc." 
+              error={errors.availability?.message} 
+              {...register('availability')} 
+            />
           </div>
         );
 
@@ -271,23 +394,66 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
               <div className="space-y-3 text-sm">
                 <div><strong>Name:</strong> {watch('firstName')} {watch('lastName')}</div>
                 <div><strong>Email:</strong> {watch('email')}</div>
-                <div><strong>University:</strong> {watch('education.university') as any}</div>
-                <div><strong>Degree / Course:</strong> {watch('education.course') as any}</div>
+                <div><strong>Phone:</strong> {watch('phone')}</div>
+                <div><strong>University:</strong> {watch('education.university')}</div>
+                <div><strong>Degree:</strong> {watch('education.degree')} in {watch('education.field')}</div>
+                <div><strong>Graduation Year:</strong> {watch('education.graduationYear')}</div>
                 <div><strong>Resume:</strong> {resumeFile ? resumeFile.name : resumeLink ? resumeLink : 'Not provided'}</div>
-                <div><strong>Portfolio:</strong> {portfolioFile ? portfolioFile.name : watch('portfolioWebsite' as any) ? (watch('portfolioWebsite' as any)) : 'Not provided'}</div>
+                <div><strong>Portfolio:</strong> {portfolioFile ? portfolioFile.name : 'Not provided'}</div>
               </div>
             </div>
 
             <div className="flex items-start space-x-3">
-              <input type="checkbox" id="terms" className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500" {...register('termsAccepted' as any)} />
-              <label htmlFor="terms" className="text-sm text-gray-700">I agree to the Terms and Conditions and Privacy Policy. I understand that my application will be reviewed and I may be contacted for interviews.</label>
+              <input 
+                type="checkbox" 
+                id="terms" 
+                className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                {...register('termsAccepted')} 
+              />
+              <label htmlFor="terms" className="text-sm text-gray-700">
+                I agree to the Terms and Conditions and Privacy Policy. I understand that my application will be reviewed and I may be contacted for interviews.
+              </label>
             </div>
-            {errors.termsAccepted && (<p className="text-sm text-red-600">{errors.termsAccepted.message}</p>)}
+            {errors.termsAccepted && (
+              <p className="text-sm text-red-600 mt-2">{errors.termsAccepted.message}</p>
+            )}
           </div>
         );
 
       default:
         return null;
+    }
+  };
+
+  const validateStep = async () => {
+    let fieldsToValidate: string[] = [];
+    
+    switch (currentStep) {
+      case 0:
+        fieldsToValidate = ['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'address', 'city', 'state', 'zipCode'];
+        break;
+      case 1:
+        fieldsToValidate = ['education.degree', 'education.field', 'education.university', 'education.graduationYear', 'experience.skills'];
+        break;
+      case 2:
+        fieldsToValidate = ['coverLetter', 'whyInterested', 'availability'];
+        break;
+      case 3:
+        // Resume validation handled separately
+        return hasResumeProvided;
+      default:
+        return true;
+    }
+
+    const isValid = await trigger(fieldsToValidate as any);
+    return isValid;
+  };
+console.log('this is error',errors)
+  const handleNext = async () => {
+    const isValid = await validateStep();
+    console.log('this is validation',isValid)
+    if (isValid) {
+      setCurrentStep(Math.min(steps.length - 1, currentStep + 1));
     }
   };
 
@@ -311,7 +477,12 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
           {/* Step Labels */}
           <div className="flex justify-between text-xs text-gray-500">
             {steps.map((step, index) => (
-              <span key={index} className={`${index <= currentStep ? 'text-blue-600 font-medium' : ''}`}>{step}</span>
+              <span 
+                key={index} 
+                className={`${index <= currentStep ? 'text-blue-600 font-medium' : ''}`}
+              >
+                {step}
+              </span>
             ))}
           </div>
         </div>
@@ -322,14 +493,28 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
           {renderStep()}
 
           <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
-            <Button type="button" variant="outline" onClick={() => setCurrentStep(Math.max(0, currentStep - 1))} disabled={currentStep === 0}>Previous</Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setCurrentStep(Math.max(0, currentStep - 1))} 
+              disabled={currentStep === 0}
+            >
+              Previous
+            </Button>
 
             {currentStep < steps.length - 1 ? (
-              <Button type="button" onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}>
+              <Button 
+                type="button" 
+                onClick={handleNext}
+              >
                 Next
               </Button>
             ) : (
-              <Button type="submit" loading={loading} disabled={!hasResumeProvided || Object.keys(errors).length !== 0}>
+              <Button 
+                type="submit" 
+                loading={loading} 
+                disabled={!hasResumeProvided}
+              >
                 Submit Application
               </Button>
             )}

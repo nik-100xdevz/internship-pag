@@ -46,8 +46,8 @@ export const applicationSchema = z.object({
   }),
   
   // Application Specific
-  coverLetter: z.string().min(100, 'Cover letter must be at least 100 characters'),
-  whyInterested: z.string().min(50, 'Please explain why you are interested (min 50 characters)'),
+  coverLetter: z.string().min(10, 'Cover letter must be at least 10 characters'),
+  whyInterested: z.string().min(5, 'Please explain why you are interested (min 5 characters)'),
   availability: z.string().min(1, 'Availability is required'),
   
   // Agreements
